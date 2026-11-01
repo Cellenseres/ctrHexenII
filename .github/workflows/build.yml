@@ -1,0 +1,23 @@
+name: 3DS build
+on:
+  push:
+    branches: [master, 'feat/**']
+  pull_request:
+jobs:
+  devkitpro:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build OpenDSP library
+        run: |
+          git clone --depth 1 https://github.com/Cellenseres/OpenDSP.git /tmp/OpenDSP
+          make -C /tmp/OpenDSP/library install
+      - name: Build 3DSX
+        run: make -j2
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: ctrHexenII-3dsx
+          path: ctrHexenII.3dsx
