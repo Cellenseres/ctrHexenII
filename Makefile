@@ -44,7 +44,7 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			-fomit-frame-pointer -ffast-math \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -Di386="0" -DARM11 -D_3DS -DQUAKE2RJ -DRJNET -fno-short-enums
+CFLAGS	+=	-std=gnu11 $(INCLUDE) -Di386="0" -DARM11 -D_3DS -DQUAKE2RJ -DRJNET -fno-short-enums
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
