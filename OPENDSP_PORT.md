@@ -122,3 +122,8 @@ library. No external `dspfirm.cdc` is needed.
 The previously reported black screen in the no-audio build remains an
 independent issue. This update requires real 3DS testing; the CI build alone
 does not verify lid-sleep or HOME restore.
+
+## CIA Build
+
+See [CIA packaging](docs/CIA.md). Builds both a CIA and a 3DSX using the
+same embedded OpenDSP firmware. Commercial game data remains external.

@@ -32,6 +32,8 @@ SOURCES		:=	source
 APP_AUTHOR 	:= Rinnegatamante
 APP_TITLE 	:= ctrHexenII
 APP_DESCRIPTION := Hexen II port for 3DS
+BANNERTOOL ?= bannertool
+MAKEROM ?= makerom
 
 DATA		:=	data
 INCLUDES	:=
@@ -198,7 +200,7 @@ ifeq ($(strip $(NO_SMDH)),)
 	export _3DSXFLAGS += --smdh=$(CURDIR)/$(TARGET).smdh
 endif
 
-.PHONY: $(BUILD) clean all
+.PHONY: $(BUILD) clean all cia
 
 #---------------------------------------------------------------------------------
 all: $(BUILD)
@@ -207,6 +209,15 @@ $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
+# CIA uses the same ELF/SMDH as the 3DSX, following OpenDSP Sound Lab.
+# It only contains the homebrew application; the commercial game PAKs stay on SD.
+cia: all
+	@mkdir -p $(BUILD)
+	$(BANNERTOOL) makebanner -i banner.png -a audio.wav -o $(BUILD)/hexenii.bnr
+	$(MAKEROM) -f cia -o $(TARGET).cia -target t -exefslogo \
+		-rsf meta/hexenii.rsf -elf $(TARGET).elf -icon $(TARGET).smdh \
+		-banner $(BUILD)/hexenii.bnr -ver 1024
+	python3 tools/check_cia.py $(TARGET).cia 1.0.0
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...

@@ -13,9 +13,9 @@ jobs:
       matrix:
         include:
           - mode: normal
-            artifact: ctrHexenII-3dsx
+            artifact: ctrHexenII-normal
           - mode: noaudio
-            artifact: ctrHexenII-sleep-noaudio
+            artifact: ctrHexenII-noaudio-diagnostic
     steps:
       - uses: actions/checkout@v4
       - name: Build OpenDSP library
@@ -35,8 +35,24 @@ jobs:
           else
             make -j2
           fi
+      - name: Install CIA packaging tools
+        run: |
+          apt-get update -qq && apt-get install -y -qq curl unzip ca-certificates
+          curl -fL --retry 3 -o /tmp/makerom.zip https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18.4/makerom-v0.18.4-ubuntu_x86_64.zip
+          curl -fL --retry 3 -o /tmp/bannertool.zip https://github.com/Epicpkmn11/bannertool/releases/download/v1.2.2/bannertool.zip
+          echo 'e4259c08fe8944ebadd5f4b96f9a8603e5427338074cfc46323fbbc3410d51ed  /tmp/bannertool.zip' | sha256sum -c -
+          mkdir -p /tmp/cia-mkr
+          unzip -oq /tmp/makerom.zip -d /tmp/cia-mkr
+          find /tmp/cia-mkr -type f -name 'makerom' -exec install -m755 {} /usr/local/bin/makerom \;
+          unzip -oj /tmp/bannertool.zip 'linux-x86_64/bannertool' -d /usr/local/bin
+          chmod +x /usr/local/bin/bannertool
+          command -v makerom && command -v bannertool
+      - name: Build CIA
+        run: make cia
       - uses: actions/upload-artifact@v4
         if: success()
         with:
           name: ${{ matrix.artifact }}
-          path: ctrHexenII.3dsx
+          path: |
+            ctrHexenII.3dsx
+            ctrHexenII.cia
