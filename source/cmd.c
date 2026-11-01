@@ -110,8 +110,11 @@ void Cbuf_InsertText (char *text)
 	else
 		temp = NULL;	// shut up compiler
 		
-// add the entire text of the file
+// Keep inserted scripts separate from the commands that were already queued.
+	// Old cfg files are not guaranteed to end in a newline.
 	Cbuf_AddText (text);
+	if (text[0] && text[strlen(text) - 1] != '\n')
+		Cbuf_AddText ("\n");
 	
 // add the copied off data
 	if (templen)
@@ -150,6 +153,15 @@ void Cbuf_Execute (void)
 		}
 			
 				
+		if (i >= (int)sizeof(line))
+		{
+			Con_Printf ("Cbuf_Execute: command too long (%d bytes)\n", i);
+			if (i < cmd_text.cursize)
+				i++; // skip the separator as well
+			cmd_text.cursize -= i;
+			memmove (text, text+i, cmd_text.cursize);
+			continue;
+		}
 		memcpy (line, text, i);
 		line[i] = 0;
 		
@@ -163,7 +175,7 @@ void Cbuf_Execute (void)
 		{
 			i++;
 			cmd_text.cursize -= i;
-			memcpy (text, text+i, cmd_text.cursize);
+			memmove (text, text+i, cmd_text.cursize);
 		}
 
 // execute the command line

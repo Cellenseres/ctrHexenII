@@ -43,6 +43,8 @@ keyname_t keynames[] =
 	{"TAB", K_TAB},
 	{"START", K_ENTER}, // Start Button
 	{"SELECT", K_ESCAPE}, // Select Button
+	{"ENTER", K_ENTER}, // PC config compatibility
+	{"ESCAPE", K_ESCAPE}, // PC config compatibility
 	{"SPACE", K_SPACE},
 	{"BACKSPACE", K_BACKSPACE},
 	{"UPARROW", K_UPARROW},

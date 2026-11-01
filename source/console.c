@@ -8,6 +8,7 @@
 #endif
 #include <fcntl.h>
 #include "quakedef.h"
+#include <3ds/console.h>
 
 int 		con_linewidth;
 

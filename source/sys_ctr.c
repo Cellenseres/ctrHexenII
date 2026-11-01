@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <3ds.h>
 #include <dirent.h>
 
-u8 isN3DS;
+bool isN3DS;
 
 #define TICKS_PER_SEC 268123480.0
 
@@ -35,6 +35,20 @@ qboolean		consoleFirst = true;
 u64 initialTime = 0;
 int hostInitialized = 0;
 extern u8 cns_idx;
+extern u16 *fb;
+
+static aptHookCookie sleep_cookie;
+static volatile bool resumed_from_sleep;
+static volatile bool restored_from_home;
+
+static void sleep_hook(APT_HookType event, void *user)
+{
+    (void)user;
+    if (event == APTHOOK_ONWAKEUP)
+        resumed_from_sleep = true;
+    else if (event == APTHOOK_ONRESTORE)
+        restored_from_home = true;
+}
 
 /*
 ===============================================================================
@@ -147,11 +161,13 @@ int     Sys_FileTime (char *path)
 
 void Sys_mkdir (char *path)
 {
-	FS_Archive sdmcArchive = (FS_Archive){0x9, (FS_Path){PATH_EMPTY, 1, (u8*)""}};
-	FSUSER_OpenArchive( &sdmcArchive);
-	FS_Path filePath=fsMakePath(PATH_ASCII, &path[5]);
-	FSUSER_CreateDirectory(sdmcArchive,filePath, FS_ATTRIBUTE_DIRECTORY);
-	FSUSER_CloseArchive( &sdmcArchive);
+	FS_Archive sdmcArchive;
+    Result result = FSUSER_OpenArchive(&sdmcArchive, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, ""));
+    if (R_FAILED(result))
+        return;
+    FS_Path filePath = fsMakePath(PATH_ASCII, &path[5]);
+    FSUSER_CreateDirectory(sdmcArchive, filePath, FS_ATTRIBUTE_DIRECTORY);
+    FSUSER_CloseArchive(sdmcArchive);
 }
 
 
@@ -188,7 +204,6 @@ void Sys_Error (char *error, ...)
 	Host_Shutdown();
 	gfxExit();
 	hidExit();
-	sdmcExit();
 	fsExit();
 	exit(1);
 }
@@ -212,7 +227,6 @@ void Sys_Quit (void)
 	Host_Shutdown();
 	gfxExit();
 	hidExit();
-	sdmcExit();
 	fsExit();
 	exit (0);
 }
@@ -369,7 +383,6 @@ int main (int argc, char **argv)
 
 	gfxInit(GSP_RGB565_OES,GSP_RGB565_OES,false);
 	fsInit();
-	sdmcInit();
 	hidInit();
 	if (isN3DS) irrstInit();
 	hidScanInput();
@@ -388,7 +401,7 @@ int main (int argc, char **argv)
 	}else consoleInit(GFX_BOTTOM, NULL);
 	Sys_Printf("Console initialized...\n");
 
-	char *qargv[3];
+	char *qargv[4];
 	int   qargc = 1;
 
 	qargv[0] = "";
@@ -400,11 +413,15 @@ int main (int argc, char **argv)
 		}
 	}
 
+#ifdef H2_SLEEP_DIAG_NO_AUDIO
+	qargv[qargc++] = "-nosound";
+#endif
+
 	static quakeparms_t    parms;
 	Sys_Printf("Allocating membase...\n");
 	parms.memsize = 24*1024*1024;
 	parms.membase = malloc(parms.memsize);
-	parms.basedir = ".";
+	parms.basedir = "sdmc:/3ds/ctrHexenII";
 	
 	Sys_Printf("COM Init...\n");
 	COM_InitArgv (qargc, qargv);
@@ -416,7 +433,7 @@ int main (int argc, char **argv)
 	hostInitialized = true;
 	
 	// Skipping default setting if config file exists
-	char* cfg = Sys_FindFirstFile("sdmc:/portals","config.cfg");
+	char* cfg = Sys_FindFirstFile(com_gamedir, "config.cfg");
 	if (cfg == NULL){
 	
 		// Set default 3DS controls
@@ -433,21 +450,30 @@ int main (int argc, char **argv)
 		Cbuf_AddText ("bind RIGHTARROW invright\n"); // Right
 		Cbuf_AddText ("sensitivity 5\n"); // Analog Sensitivity
 		Cbuf_AddText ("chase_active 0\n"); // 3rd Person support
-		Cbuf_AddText ("+mlook"); // Y-Axis Camera movement
+		Cbuf_AddText ("+mlook\n"); // Y-Axis Camera movement
 	}
 	Sys_FindClose();
 	
+	aptHook(&sleep_cookie, sleep_hook, NULL);
 	oldtime = Sys_FloatTime() -0.1;
 	while (aptMainLoop())
 	{
 		time = Sys_FloatTime();
+		if (resumed_from_sleep || restored_from_home) {
+            resumed_from_sleep = false;
+            restored_from_home = false;
+            oldtime = time;
+            fb = (u16 *)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
+            SNDDMA_Resume();
+            continue;
+        }
 		Host_Frame (time - oldtime);
 		oldtime = time;
 	}
+	aptUnhook(&sleep_cookie);
 	free(parms.membase);
 	gfxExit();
 	hidExit();
-	sdmcExit();
 	fsExit();
 	return 0;
 }

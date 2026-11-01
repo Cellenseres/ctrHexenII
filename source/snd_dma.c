@@ -819,11 +819,18 @@ void S_Update(vec3_t origin, vec3_t forward, vec3_t right, vec3_t up)
 	S_Update_();
 }
 
+static int sound_buffers, old_samplepos;
+
+void SND_ResetSoundClock(void)
+{
+    sound_buffers = old_samplepos = 0;
+    soundtime = paintedtime = 0;
+}
+
 void GetSoundtime(void)
 {
 	int		samplepos;
-	static	int		buffers;
-	static	int		oldsamplepos;
+
 	int		fullsamples;
 	
 	fullsamples = shm->samples / shm->channels;
@@ -832,20 +839,20 @@ void GetSoundtime(void)
 // calls to S_Update.  Oh well.
 	samplepos = SNDDMA_GetDMAPos();
 
-	if (samplepos < oldsamplepos)
+	if (samplepos < old_samplepos)
 	{
-		buffers++;					// buffer wrapped
+		sound_buffers++;					// buffer wrapped
 		
 		if (paintedtime > 0x40000000)
 		{	// time to chop things off to avoid 32 bit limits
-			buffers = 0;
+			sound_buffers = 0;
 			paintedtime = fullsamples;
 			S_StopAllSounds (true);
 		}
 	}
-	oldsamplepos = samplepos;
+	old_samplepos = samplepos;
 
-	soundtime = buffers*fullsamples + samplepos/shm->channels;
+	soundtime = sound_buffers*fullsamples + samplepos/shm->channels;
 }
 
 void S_ExtraUpdate (void)

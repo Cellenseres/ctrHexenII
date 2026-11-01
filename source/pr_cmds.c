@@ -3221,7 +3221,7 @@ void PF_updateInfoPlaque (void)
 	unsigned int check;
 	unsigned int index, mode;
 	
-	long *use;
+	unsigned int *use;
 	int  ofs = 0;
 
 	index = G_FLOAT(OFS_PARM0);
@@ -3237,7 +3237,7 @@ void PF_updateInfoPlaque (void)
 		use = &info_mask;
 	}
 		
-	check = (long) (1 << (index - ofs));
+	check = 1u << (index - ofs);
 		
 	if (((mode & 1) && ((*use) & check)) || ((mode & 2) && !((*use) & check)));
 	else

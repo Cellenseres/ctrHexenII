@@ -104,6 +104,7 @@ int SNDDMA_GetDMAPos(void);
 
 // shutdown the DMA xfer.
 void SNDDMA_Shutdown(void);
+void SNDDMA_Resume(void);
 
 // ====================================================================
 // User-setable variables
@@ -153,6 +154,7 @@ wavinfo_t GetWavinfo (char *name, byte *wav, int wavlength);
 
 void SND_InitScaletable (void);
 void SNDDMA_Submit(void);
+void SND_ResetSoundClock(void);
 
 void S_AmbientOff (void);
 void S_AmbientOn (void);

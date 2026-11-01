@@ -227,6 +227,8 @@ char *DiffNames[NUM_CLASSES][4] =
 
 //=============================================================================
 /* Support Routines */
+void M_Print(int cx, int cy, char *str);
+
 void M_DrawCheckbox (int x, int y, int on)
 {
 #if 0
@@ -795,7 +797,7 @@ void M_Main_Draw (void)
 	M_DrawBigString (72,60+(3*20),"HELP");
 	M_DrawBigString (72,60+(4*20),"QUIT");
 	if (snd_initialized){
-		if (isDSP) M_Print (72,60+(6*20),"Audio service: dsp::DSP");
+		if (isDSP) M_Print (72,60+(6*20),"Audio service: OpenDSP");
 		else M_Print (72,60+(6*20),"Audio service: csnd:SND");
 	}else M_Print (72,60+(6*20),"Audio service: None");
 	
@@ -2158,7 +2160,7 @@ void M_Options_Key (int k)
 			Cbuf_AddText ("bind RIGHTARROW invright\n"); // Right
 			Cbuf_AddText ("sensitivity 5\n"); // Analog Sensitivity
 			Cbuf_AddText ("chase_active 0\n"); // 3rd Person support
-			Cbuf_AddText ("+mlook"); // Y-Axis Camera movement
+			Cbuf_AddText ("+mlook\n"); // Y-Axis Camera movement
 			
 			break;
 		default:
