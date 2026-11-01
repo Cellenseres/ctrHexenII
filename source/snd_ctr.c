@@ -216,12 +216,18 @@ qboolean SNDDMA_Init(void)
   return 1;
 }
 
-/* APT has already reloaded the DSP when the main loop calls this.
- * The firmware and libctru may no longer agree on the old looping wavebuf,
- * so requeue it from a clean state instead of calling opendspInit again. */
+/* Legacy fallback for firmware without sleep-state preservation and CSND.
+ * The current embedded OpenDSP firmware restores its audio state itself. */
 void SNDDMA_Resume(void)
 {
     if (!snd_initialized || !shm || !audiobuffer)
+        return;
+
+    /* OpenDSP's sleep-state support preserves the voices, effect state and
+     * existing NDSP wave buffers. Resetting channel 8 here would throw that
+     * restored state away (and could silence the game after HOME). The game
+     * clock is already rebased by the APT loop in sys_ctr.c. */
+    if (isDSP && (capabilities & OPENDSP_CAP_SLEEP))
         return;
 
     /* Discard voices painted before suspension and restart the Quake

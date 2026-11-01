@@ -102,3 +102,23 @@ This is a **candidate** fix for silence after HOME. It does not claim
 to resolve permanent lid-sleep black screens. The independent no-audio
 build also failed on actual hardware, so the remaining sleep issue must
 be investigated separately from OpenDSP.
+
+## OpenDSP sleep-preservation update (2026-11-01)
+
+The build is pinned to OpenDSP commit
+[`a15c8615c165`](https://github.com/Cellenseres/OpenDSP/commit/a15c8615c1659f34bfb2b38df69a9860f4cc7080).
+This version includes `OPENDSP_CAP_SLEEP`, which preserves DSP voices,
+decoder/effect state, and playback across HOME and lid sleep transitions.
+
+`SNDDMA_Resume()` must **not** reset NDSP channel 8 when that capability is
+present: doing so would erase the state the firmware and libctru restored.
+The game still rebases the frame-time clock and refreshes the framebuffer
+pointer after APT resumes. The existing channel-restart path is retained
+only for CSND and older OpenDSP firmware without context preservation.
+
+The fixes are included in the `.3dsx` through the pinned OpenDSP static
+library. No external `dspfirm.cdc` is needed.
+
+The previously reported black screen in the no-audio build remains an
+independent issue. This update requires real 3DS testing; the CI build alone
+does not verify lid-sleep or HOME restore.
