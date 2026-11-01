@@ -88,3 +88,17 @@ If only the normal build freezes, investigate NDSP/OpenDSP wake handling or
 the game's wave-buffer state. If both freeze, investigate APT, graphics and
 other game code. Successful cross-builds do not prove sleep/wake correctness
 on hardware.
+
+## HOME resume
+
+APT uses different lifecycle hooks: `APTHOOK_ONRESTORE` for HOME-menu
+restoration, `APTHOOK_ONWAKEUP` for lid sleep. After `aptMainLoop()`
+returns, the game resets the frame delta, refreshes the framebuffer,
+clears stale sound paints and requeues its *existing* looping NDSP wavebuf
+via `SNDDMA_Resume()`. The embedded firmware is not reloaded by the game.
+The CSND fallback likewise restarts its PCM ring.
+
+This is a **candidate** fix for silence after HOME. It does not claim
+to resolve permanent lid-sleep black screens. The independent no-audio
+build also failed on actual hardware, so the remaining sleep issue must
+be investigated separately from OpenDSP.

@@ -216,6 +216,51 @@ qboolean SNDDMA_Init(void)
   return 1;
 }
 
+/* APT has already reloaded the DSP when the main loop calls this.
+ * The firmware and libctru may no longer agree on the old looping wavebuf,
+ * so requeue it from a clean state instead of calling opendspInit again. */
+void SNDDMA_Resume(void)
+{
+    if (!snd_initialized || !shm || !audiobuffer)
+        return;
+
+    /* Discard voices painted before suspension and restart the Quake
+     * playback timeline together with the hardware channel. */
+    if (isDSP) {
+        ndspChnWaveBufClear(0x08);
+        ndspChnReset(0x08);
+    }
+    S_StopAllSounds(true);
+    SND_ResetSoundClock();
+    last_submitted = 0;
+    initial_tick = svcGetSystemTick();
+
+    if (isDSP) {
+        ndspSetOutputMode(NDSP_OUTPUT_STEREO);
+        ndspChnSetInterp(0x08, NDSP_INTERP_LINEAR);
+        ndspChnSetRate(0x08, (float)QUAKE_SAMPLERATE);
+        ndspChnSetFormat(0x08, NDSP_FORMAT_STEREO_PCM16);
+        waveBuf->data_vaddr = audiobuffer;
+        waveBuf->nsamples = DSP_BUFSIZE;
+        waveBuf->looping = true;
+        waveBuf->status = NDSP_WBUF_FREE;
+        waveBuf->next = NULL;
+        DSP_FlushDataCache(audiobuffer, DSP_BUFSIZE * 4);
+        reverb_active = echo_active = -1;
+        update_effects();
+        ndspChnWaveBufAdd(0x08, waveBuf);
+        ndspChnSetPaused(0x08, false);
+        Con_Printf("OpenDSP: audio channel restored after APT resume\n");
+    } else {
+        CSND_FlushDataCache(audiobuffer, CSND_BUFSIZE * 2);
+        Result rc = csndPlaySound(0x08, SOUND_LINEAR_INTERP | SOUND_REPEAT | SOUND_FORMAT_16BIT,
+                                  QUAKE_SAMPLERATE, 1.0, 0.0,
+                                  audiobuffer, audiobuffer, CSND_BUFSIZE * 2);
+        if (R_FAILED(rc))
+            Con_Printf("CSND: resume failed (0x%08lx)\n", (unsigned long)rc);
+    }
+}
+
 int SNDDMA_GetDMAPos(void)
 {
   if(!snd_initialized)

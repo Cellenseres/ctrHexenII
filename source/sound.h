@@ -104,6 +104,7 @@ int SNDDMA_GetDMAPos(void);
 
 // shutdown the DMA xfer.
 void SNDDMA_Shutdown(void);
+void SNDDMA_Resume(void);
 
 // ====================================================================
 // User-setable variables

@@ -39,12 +39,15 @@ extern u16 *fb;
 
 static aptHookCookie sleep_cookie;
 static volatile bool resumed_from_sleep;
+static volatile bool restored_from_home;
 
 static void sleep_hook(APT_HookType event, void *user)
 {
     (void)user;
     if (event == APTHOOK_ONWAKEUP)
         resumed_from_sleep = true;
+    else if (event == APTHOOK_ONRESTORE)
+        restored_from_home = true;
 }
 
 /*
@@ -456,12 +459,14 @@ int main (int argc, char **argv)
 	while (aptMainLoop())
 	{
 		time = Sys_FloatTime();
-		if (resumed_from_sleep) {
-			resumed_from_sleep = false;
-			oldtime = time;
-			fb = (u16 *)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
-			continue;
-		}
+		if (resumed_from_sleep || restored_from_home) {
+            resumed_from_sleep = false;
+            restored_from_home = false;
+            oldtime = time;
+            fb = (u16 *)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
+            SNDDMA_Resume();
+            continue;
+        }
 		Host_Frame (time - oldtime);
 		oldtime = time;
 	}
