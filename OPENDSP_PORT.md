@@ -34,3 +34,23 @@ Effects currently process the combined output, not individual game emitters.
 
 Build and hardware tests are required before claiming working audio.
 Keep the original GPL licensing and do not distribute proprietary game data.
+
+## SD card layout
+
+Keep all game files under one folder; no `/data1` or `/portals` in the SD root:
+
+```text
+sdmc:/3ds/ctrHexenII/
+    ctrHexenII.3dsx
+    data1/
+        pak0.pak
+        pak1.pak
+    portals/               # optional Portal of Praevus mission pack
+        pak0.pak
+```
+
+Hexen II loads the official game data from `data1` and only adds `portals`
+if that folder exists. Configs and saves go into the active game directory
+(`data1` without the expansion). Do not redistribute commercial game assets.
+
+The configured base directory is `sdmc:/3ds/ctrHexenII`, not the SD root.
