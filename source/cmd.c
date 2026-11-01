@@ -110,8 +110,11 @@ void Cbuf_InsertText (char *text)
 	else
 		temp = NULL;	// shut up compiler
 		
-// add the entire text of the file
+// Keep inserted scripts separate from the commands that were already queued.
+	// Old cfg files are not guaranteed to end in a newline.
 	Cbuf_AddText (text);
+	if (text[0] && text[strlen(text) - 1] != '\n')
+		Cbuf_AddText ("\n");
 	
 // add the copied off data
 	if (templen)
