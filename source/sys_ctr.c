@@ -43,7 +43,7 @@ static volatile bool resumed_from_sleep;
 static void sleep_hook(APT_HookType event, void *user)
 {
     (void)user;
-    if (event == APHOOK_ONWAKEUP)
+    if (event == APTHOOK_ONWAKEUP)
         resumed_from_sleep = true;
 }
 
