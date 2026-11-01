@@ -2160,7 +2160,7 @@ void M_Options_Key (int k)
 			Cbuf_AddText ("bind RIGHTARROW invright\n"); // Right
 			Cbuf_AddText ("sensitivity 5\n"); // Analog Sensitivity
 			Cbuf_AddText ("chase_active 0\n"); // 3rd Person support
-			Cbuf_AddText ("+mlook"); // Y-Axis Camera movement
+			Cbuf_AddText ("+mlook\n"); // Y-Axis Camera movement
 			
 			break;
 		default:
