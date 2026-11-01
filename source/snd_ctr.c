@@ -154,7 +154,7 @@ qboolean SNDDMA_Init(void)
   if (isDSP) audiobuffer = linearAlloc(DSP_BUFSIZE * 4);
   else audiobuffer = linearAlloc(CSND_BUFSIZE * 2);
   if (!audiobuffer) {
-    if (isDSP) opeopendspExit(); else csndExit();
+    if (isDSP) opendspExit(); else csndExit();
     return 0;
   }
   memset(audiobuffer, 0, isDSP ? DSP_BUFSIZE * 4 : CSND_BUFSIZE * 2);
@@ -185,10 +185,28 @@ qboolean SNDDMA_Init(void)
 		ndspChnSetRate(0x08, (float)QUAKE_SAMPLERATE);
 		ndspChnSetFormat(0x08, NDSP_FORMAT_STEREO_PCM16);
 		waveBuf = (ndspWaveBuf*)calloc(1, sizeof(ndspWaveBuf));
+        if (!waveBuf) {
+            opendspExit();
+            linearFree(audiobuffer);
+            audiobuffer = NULL;
+            shm = NULL;
+            return 0;
+        }
 		createDspBlock(waveBuf, 4, DSP_BUFSIZE * 4, 1, audiobuffer);
 		update_effects();
 		ndspChnWaveBufAdd(0x08, waveBuf);
-	}else csndPlaySound(0x08, SOUND_LINEAR_INTERP | SOUND_REPEAT | SOUND_FORMAT_16BIT, QUAKE_SAMPLERATE, 1.0, 0.0, (u32*)audiobuffer, (u32*)audiobuffer, CSND_BUFSIZE * 2);
+	}else {
+        Result r = csndPlaySound(0x08, SOUND_LINEAR_INTERP | SOUND_REPEAT | SOUND_FORMAT_16BIT,
+                                 QUAKE_SAMPLERATE, 1.0, 0.0,
+                                 (u32*)audiobuffer, (u32*)audiobuffer, CSND_BUFSIZE * 2);
+        if (R_FAILED(r)) {
+            csndExit();
+            linearFree(audiobuffer);
+            audiobuffer = NULL;
+            shm = NULL;
+            return 0;
+        }
+    }
 	
   SND_ResetSoundClock();
   last_submitted = 0;
@@ -221,11 +239,14 @@ void SNDDMA_Shutdown(void)
   if(snd_initialized){
 	if (isDSP){
 		ndspChnWaveBufClear(0x08);
-		ndspExit();
+        opendspReverbSet(0, NULL);
+        opendspDelaySet(1, NULL);
+		opendspExit();
 		free(waveBuf);
+        waveBuf = NULL;
 	}else{
 		CSND_SetPlayState(0x08, 0);
-		CSND_UpdateInfo(0);
+        csndExecCmds(true);
 		csndExit();
 	}
 	linearFree(audiobuffer);
