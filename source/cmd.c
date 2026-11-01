@@ -153,6 +153,15 @@ void Cbuf_Execute (void)
 		}
 			
 				
+		if (i >= (int)sizeof(line))
+		{
+			Con_Printf ("Cbuf_Execute: command too long (%d bytes)\n", i);
+			if (i < cmd_text.cursize)
+				i++; // skip the separator as well
+			cmd_text.cursize -= i;
+			memmove (text, text+i, cmd_text.cursize);
+			continue;
+		}
 		memcpy (line, text, i);
 		line[i] = 0;
 		
@@ -166,7 +175,7 @@ void Cbuf_Execute (void)
 		{
 			i++;
 			cmd_text.cursize -= i;
-			memcpy (text, text+i, cmd_text.cursize);
+			memmove (text, text+i, cmd_text.cursize);
 		}
 
 // execute the command line
