@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DSP_BUFSIZE 16384
 qboolean isDSP = false;
 u32 SAMPLERATE = QUAKE_SAMPLERATE<<1;
-u32 *audiobuffer;
+u8 *audiobuffer;
 ndspWaveBuf* waveBuf;
 u64 initial_tick;
 int snd_inited;
@@ -45,7 +45,7 @@ static cvar_t h2_echo = {"h2_echo", "0", true};
 void SND_ResetSoundClock(void);
 
 // createDspBlock: Create a new block for DSP service
-void createDspBlock(ndspWaveBuf* waveBuf, u16 bps, u32 size, u8 loop, u32* data){
+void createDspBlock(ndspWaveBuf* waveBuf, u16 bps, u32 size, u8 loop, void* data){
 	waveBuf->data_vaddr = (void*)data;
 	waveBuf->nsamples = size / bps;
 	waveBuf->looping = loop;
