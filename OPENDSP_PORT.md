@@ -71,3 +71,20 @@ script boundaries separated even when the file has no final newline.
 No external `dspfirm.cdc` is required, and the port does not probe for that
 file. `opendspInit()` uses the firmware built into the OpenDSP static library.
 The CSND fallback is only used when OpenDSP initialization itself fails.
+
+## Sleep/wake diagnostics
+
+The game registers an APT wake hook that only records the event. After
+`aptMainLoop()` returns, the main loop skips one simulation frame, rebases
+the frame clock and reacquires the software framebuffer pointer.
+
+GitHub Actions publishes two builds from the same source:
+- `ctrHexenII-3dsx`: normal OpenDSP build.
+- `ctrHexenII-sleep-noaudio`: diagnostic build that injects `-nosound`
+  before game startup, never initializing game audio services.
+
+Try both after closing and opening the 3DS lid, at the menu and in gameplay.
+If only the normal build freezes, investigate NDSP/OpenDSP wake handling or
+the game's wave-buffer state. If both freeze, investigate APT, graphics and
+other game code. Successful cross-builds do not prove sleep/wake correctness
+on hardware.

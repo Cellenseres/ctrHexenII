@@ -44,6 +44,10 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			-fomit-frame-pointer -ffast-math -fcommon \
 			$(ARCH)
 
+ifeq ($(H2_SLEEP_DIAG_NO_AUDIO),1)
+CFLAGS += -DH2_SLEEP_DIAG_NO_AUDIO
+endif
+
 CFLAGS	+=	-std=gnu11 $(INCLUDE) -Di386="0" -DARM11 -D_3DS -DQUAKE2RJ -DRJNET -fno-short-enums
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11

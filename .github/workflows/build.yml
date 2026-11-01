@@ -8,6 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkitarm:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: normal
+            artifact: ctrHexenII-3dsx
+          - mode: noaudio
+            artifact: ctrHexenII-sleep-noaudio
     steps:
       - uses: actions/checkout@v4
       - name: Build OpenDSP library
@@ -15,9 +23,14 @@ jobs:
           git clone --depth 1 https://github.com/Cellenseres/OpenDSP.git /tmp/OpenDSP
           make -C /tmp/OpenDSP/library install
       - name: Build 3DSX
-        run: make -j2
+        run: |
+          if [ "${{ matrix.mode }}" = "noaudio" ]; then
+            make -j2 H2_SLEEP_DIAG_NO_AUDIO=1
+          else
+            make -j2
+          fi
       - uses: actions/upload-artifact@v4
         if: success()
         with:
-          name: ctrHexenII-3dsx
+          name: ${{ matrix.artifact }}
           path: ctrHexenII.3dsx

@@ -35,6 +35,17 @@ qboolean		consoleFirst = true;
 u64 initialTime = 0;
 int hostInitialized = 0;
 extern u8 cns_idx;
+extern u16 *fb;
+
+static aptHookCookie sleep_cookie;
+static volatile bool resumed_from_sleep;
+
+static void sleep_hook(APT_HookType event, void *user)
+{
+    (void)user;
+    if (event == APHOOK_ONWAKEUP)
+        resumed_from_sleep = true;
+}
 
 /*
 ===============================================================================
@@ -387,7 +398,7 @@ int main (int argc, char **argv)
 	}else consoleInit(GFX_BOTTOM, NULL);
 	Sys_Printf("Console initialized...\n");
 
-	char *qargv[3];
+	char *qargv[4];
 	int   qargc = 1;
 
 	qargv[0] = "";
@@ -398,6 +409,10 @@ int main (int argc, char **argv)
 			qargc += 2;
 		}
 	}
+
+#ifdef H2_SLEEP_DIAG_NO_AUDIO
+	qargv[qargc++] = "-nosound";
+#endif
 
 	static quakeparms_t    parms;
 	Sys_Printf("Allocating membase...\n");
@@ -436,13 +451,21 @@ int main (int argc, char **argv)
 	}
 	Sys_FindClose();
 	
+	aptHook(&sleep_cookie, sleep_hook, NULL);
 	oldtime = Sys_FloatTime() -0.1;
 	while (aptMainLoop())
 	{
 		time = Sys_FloatTime();
+		if (resumed_from_sleep) {
+			resumed_from_sleep = false;
+			oldtime = time;
+			fb = (u16 *)gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
+			continue;
+		}
 		Host_Frame (time - oldtime);
 		oldtime = time;
 	}
+	aptUnhook(&sleep_cookie);
 	free(parms.membase);
 	gfxExit();
 	hidExit();
