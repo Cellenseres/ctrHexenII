@@ -403,7 +403,7 @@ int main (int argc, char **argv)
 	Sys_Printf("Allocating membase...\n");
 	parms.memsize = 24*1024*1024;
 	parms.membase = malloc(parms.memsize);
-	parms.basedir = ".";
+	parms.basedir = "sdmc:/3ds/ctrHexenII";
 	
 	Sys_Printf("COM Init...\n");
 	COM_InitArgv (qargc, qargv);
@@ -415,7 +415,7 @@ int main (int argc, char **argv)
 	hostInitialized = true;
 	
 	// Skipping default setting if config file exists
-	char* cfg = Sys_FindFirstFile("sdmc:/portals","config.cfg");
+	char* cfg = Sys_FindFirstFile(com_gamedir, "config.cfg");
 	if (cfg == NULL){
 	
 		// Set default 3DS controls
