@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <3ds.h>
 #include <dirent.h>
 
-u8 isN3DS;
+bool isN3DS;
 
 #define TICKS_PER_SEC 268123480.0
 
@@ -147,11 +147,13 @@ int     Sys_FileTime (char *path)
 
 void Sys_mkdir (char *path)
 {
-	FS_Archive sdmcArchive = (FS_Archive){0x9, (FS_Path){PATH_EMPTY, 1, (u8*)""}};
-	FSUSER_OpenArchive( &sdmcArchive);
-	FS_Path filePath=fsMakePath(PATH_ASCII, &path[5]);
-	FSUSER_CreateDirectory(sdmcArchive,filePath, FS_ATTRIBUTE_DIRECTORY);
-	FSUSER_CloseArchive( &sdmcArchive);
+	FS_Archive sdmcArchive;
+    Result result = FSUSER_OpenArchive(&sdmcArchive, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, ""));
+    if (R_FAILED(result))
+        return;
+    FS_Path filePath = fsMakePath(PATH_ASCII, &path[5]);
+    FSUSER_CreateDirectory(sdmcArchive, filePath, FS_ATTRIBUTE_DIRECTORY);
+    FSUSER_CloseArchive(sdmcArchive);
 }
 
 
@@ -188,7 +190,6 @@ void Sys_Error (char *error, ...)
 	Host_Shutdown();
 	gfxExit();
 	hidExit();
-	sdmcExit();
 	fsExit();
 	exit(1);
 }
@@ -212,7 +213,6 @@ void Sys_Quit (void)
 	Host_Shutdown();
 	gfxExit();
 	hidExit();
-	sdmcExit();
 	fsExit();
 	exit (0);
 }
@@ -369,7 +369,6 @@ int main (int argc, char **argv)
 
 	gfxInit(GSP_RGB565_OES,GSP_RGB565_OES,false);
 	fsInit();
-	sdmcInit();
 	hidInit();
 	if (isN3DS) irrstInit();
 	hidScanInput();
@@ -447,7 +446,6 @@ int main (int argc, char **argv)
 	free(parms.membase);
 	gfxExit();
 	hidExit();
-	sdmcExit();
 	fsExit();
 	return 0;
 }
