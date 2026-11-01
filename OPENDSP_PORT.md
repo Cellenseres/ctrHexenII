@@ -54,3 +54,15 @@ if that folder exists. Configs and saves go into the active game directory
 (`data1` without the expansion). Do not redistribute commercial game assets.
 
 The configured base directory is `sdmc:/3ds/ctrHexenII`, not the SD root.
+
+## Startup configuration compatibility
+
+The original retail `hexen.rc` / `default.cfg` startup scripts are executed from
+`data1`. Some PC-only console commands in them are not implemented by the 3DS
+port and may produce harmless `Unknown command` messages in the debug console.
+This branch supports the original `ENTER` and `ESCAPE` key aliases and keeps
+script boundaries separated even when the file has no final newline.
+
+No external `dspfirm.cdc` is required, and the port does not probe for that
+file. `opendspInit()` uses the firmware built into the OpenDSP static library.
+The CSND fallback is only used when OpenDSP initialization itself fails.
