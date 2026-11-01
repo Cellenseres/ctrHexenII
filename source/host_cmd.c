@@ -3,6 +3,7 @@
  */
 
 #include "quakedef.h"
+#include <ctype.h>
 #include <time.h>
 #include <sys/stat.h>
 //#include <dirent.h>
