@@ -41,7 +41,7 @@ INCLUDES	:=
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -Wall -O2 -mword-relocations \
-			-fomit-frame-pointer -ffast-math \
+			-fomit-frame-pointer -ffast-math -fcommon \
 			$(ARCH)
 
 CFLAGS	+=	-std=gnu11 $(INCLUDE) -Di386="0" -DARM11 -D_3DS -DQUAKE2RJ -DRJNET -fno-short-enums
