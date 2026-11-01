@@ -4,6 +4,7 @@
  */
 
 #include "quakedef.h"
+#include <dirent.h>
 
 #define NUM_SAFE_ARGVS  7
 
@@ -1563,10 +1564,18 @@ void COM_InitFilesystem (void)
 // start up default 3DS folders
 //
 	Sys_Printf("\nAdding data1 directory...");
-	COM_AddGameDirectory ("sdmc:/data1");
+	COM_AddGameDirectory (va("%s/data1", basedir));
 #ifndef NO_PRAVEUS
-	Sys_Printf("\nAdding portals directory...");
-	COM_AddGameDirectory ("sdmc:/portals");
+	/* Portals is optional; don't make it the save/config directory when absent. */
+	{
+		DIR *portals = opendir(va("%s/portals", basedir));
+		if (portals)
+		{
+			closedir(portals);
+			Sys_Printf("\nAdding portals directory...");
+			COM_AddGameDirectory (va("%s/portals", basedir));
+		}
+	}
 #endif
 
 //
