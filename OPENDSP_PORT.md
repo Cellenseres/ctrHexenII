@@ -11,6 +11,11 @@ Install devkitPro devkitARM and libctru, then build/install
 `make -C /path/to/OpenDSP/library install` before running `make` here.
 The old vendored 2016 headers and `lib/libctru.a` are not used.
 
+## Controls
+
+See [the 3DS control guide](docs/CONTROLS.md) for button mappings and resetting
+saved game controls.
+
 ## Options
 
 Console variables (disabled by default):
