@@ -227,6 +227,8 @@ char *DiffNames[NUM_CLASSES][4] =
 
 //=============================================================================
 /* Support Routines */
+void M_Print(int cx, int cy, char *str);
+
 void M_DrawCheckbox (int x, int y, int on)
 {
 #if 0
